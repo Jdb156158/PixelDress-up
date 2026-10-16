@@ -28,13 +28,12 @@ svg{display:block;width:100%;height:100%;overflow:hidden}
 .gem{color:#f069ad;font-size:32px;text-shadow:1px 2px #b83276,-1px -1px #ffb8dd}
 .plus{border-radius:50%;background:#f8a1c1;color:white;font-size:16px;font-weight:800;width:18px;height:18px;line-height:17px}
 .bottom-nav{height:85px;padding:8px 10px 9px;display:flex;gap:8px;background:#fbe0e9;border-top:1px solid #edc1cd;flex-shrink:0;z-index:10}
-.bottom-nav button{width:33.333%;background:#fffbf2;border:1.5px solid #e8bbc7;border-radius:17px;box-shadow:inset 0 2px white,0 3px #ecc9d0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative}
+.bottom-nav button{width:33.333%;background:#fffbf2;border:1.5px solid #e8bbc7;border-radius:17px;box-shadow:inset 0 2px white,0 3px #ecc9d0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative}
 .bottom-nav button.active{background:#f9b6cf;border-color:#de6c98;box-shadow:inset 0 2px #ffe6ef,0 3px #e6a0b9}
-.bottom-nav button.active:before,.bottom-nav button.active:after{content:'✿';font-size:15px;color:#fff0f6;position:absolute;top:21px;left:14px}
+.bottom-nav button.active:before,.bottom-nav button.active:after{content:'♥';font-size:17px;color:#fff0f6;position:absolute;top:21px;left:14px}
 .bottom-nav button.active:after{left:auto;right:14px}
-.nav-icon{height:27px;width:29px;color:#e26a97}
-.bottom-nav button>span:nth-child(2){font-size:17px;font-weight:750;letter-spacing:3px;margin-left:3px}
-.bottom-nav small{font-size:6px;letter-spacing:1.4px;color:#b17f90;transform:scale(.9)}
+.nav-icon{height:32px;width:36px;filter:drop-shadow(0 1px 0 #d498ac26)}
+.bottom-nav button>span:nth-child(2){font-size:16px;line-height:20px;font-weight:750;letter-spacing:3px;margin-left:3px}
 #content{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
 .scene{position:relative;isolation:isolate;min-height:0;overflow:hidden;background-position:center;background-size:cover}
 .dress-scene{flex:1;background-image:url('assets/dressing-room.png');border-bottom:3px solid #f3ced9}
@@ -169,7 +168,6 @@ body{background:#fae7ed}
 .order-panel{height:65px}
 .furniture-inventory{min-height:190px}
 .edit-actions{height:54px}
-.bottom-nav small{display:none}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}
 }
