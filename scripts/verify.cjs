@@ -4,7 +4,7 @@ require('node:fs').mkdirSync('test-results', {recursive:true});
 const base = process.env.TEST_URL || 'http://localhost:4186';
 (async () => {
  const browser = await chromium.launch({ headless:true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? {executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH} : {}) });
- const context = await browser.newContext({viewport:{width:390,height:844},acceptDownloads:true});
+ const context = await browser.newContext({viewport:{width:390,height:844},acceptDownloads:true,reducedMotion:'reduce'});
  const page = await context.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  page.on('response',r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`);});
@@ -14,6 +14,16 @@ const base = process.env.TEST_URL || 'http://localhost:4186';
  try {
  await page.goto(base);await page.waitForFunction(()=>document.querySelector('.doll')?.toDataURL().length>10000);
  const original=await canvas();
+ await click('[data-category="makeup"]');
+ const visibleFace=()=>page.locator('.doll').evaluate(c=>{const scale=c.getBoundingClientRect().height/c.height;const face=document.createElement('canvas');face.width=Math.round(270*scale);face.height=Math.round(120*scale);const ctx=face.getContext('2d');ctx.drawImage(c,70,175,270,120,0,0,face.width,face.height);return Array.from(ctx.getImageData(0,0,face.width,face.height).data);});
+ const bareFace=await visibleFace();
+ for(let i=1;i<8;i++){
+  await click(`[data-item="${i}"]`);const face=await visibleFace();let changed=0;
+  for(let p=0;p<face.length;p+=4)if(Math.max(...[0,1,2].map(c=>Math.abs(face[p+c]-bareFace[p+c])))>=24)changed++;
+  assert.ok(changed>=120,`makeup ${i} must be visible at phone size (${changed} changed pixels)`);
+ }
+ await click('[data-item="0"]');assert.equal(await canvas(),original);
+ console.log('PASS: all seven makeup looks visibly change face at phone scale; natural look restores original');
  for(const [key,value] of [['hair',1],['face',2],['makeup',1],['shoes',2]]){
   await click(`[data-category="${key}"]`);const before=await canvas();await click(`[data-item="${value}"]`);assert.notEqual(await canvas(),before,`${key} must change doll pixels`);assert.equal((await saved())[key],value);
  }

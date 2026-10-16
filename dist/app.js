@@ -62,10 +62,27 @@ const outfitNames=['草莓奶油','午后心事','晴空来信','午夜玫瑰','
 const outfitSource=[0,1,2,3,0,2,1,3];
 const outfitHue=[0,0,0,0,55,280,335,60];
 const furnitureNames=['沙发','桌椅','地毯','挂画','收纳','灯具','植物','墙饰'];
-function sprite(index, region='outfit', filter='') {
+const makeupLooks = [null,
+ {cheek:'#f2838f',lip:'#c75f69',shadow:'#d29c87'},
+ {cheek:'#ef6c9e',lip:'#ca467d',shadow:'#dd8db0'},
+ {cheek:'#ec9c62',lip:'#bd704d',shadow:'#c59765'},
+ {cheek:'#c85b94',lip:'#9e3e70',shadow:'#ad75a1'},
+ {cheek:'#c28dca',lip:'#a46597',shadow:'#b19ad5'},
+ {cheek:'#f17c67',lip:'#cd584e',shadow:'#dd9f7e'},
+ {cheek:'#d36b91',lip:'#ae4564',shadow:'#bb7c93'}
+];
+function makeupMarks(index) {
+ const look=makeupLooks[index];if(!look)return [];
+ const marks=[];
+ for(const x of [128,272])marks.push([x-14,260,28,10,look.cheek,.48],[x-10,256,20,18,look.cheek,.22]);
+ for(const x of [109,233])marks.push([x,193,58,5,look.shadow,.58],[x+5,189,48,4,look.shadow,.28]);
+ marks.push([188,267,6,5,look.lip,.95],[207,267,6,5,look.lip,.95],[191,272,19,4,look.lip,.95],[196,276,10,2,look.lip,.75],[197,272,8,2,'#ffe5e8',.7]);
+ return marks;
+}
+function sprite(index, region='outfit', filter='', makeupIndex=0) {
  const i=outfitSource[index]??index;
  const box = region==='outfit' ? [bounds[i]-8,0,405,724] : region==='hair' ? [bounds[0]-8,0,405,324] : region==='face'||region==='makeup' ? [bounds[0]+67,169,263,139] : [bounds[i]-8,589,405,130];
- return `<svg class="item-art" viewBox="${box.join(' ')}" aria-hidden="true" style="filter:${filter||`hue-rotate(${outfitHue[index]||0}deg)`}"><defs><clipPath id="char-${index}-${region}"><rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}"/></clipPath></defs><image clip-path="url(#char-${index}-${region})" href="assets/characters.png" width="2172" height="724"/></svg>`;
+ return `<svg class="item-art" viewBox="${box.join(' ')}" aria-hidden="true" style="filter:${filter||`hue-rotate(${outfitHue[index]||0}deg)`}"><defs><clipPath id="char-${index}-${region}"><rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}"/></clipPath></defs><image clip-path="url(#char-${index}-${region})" href="assets/characters.png" width="2172" height="724"/>${region==='makeup'?`<g transform="translate(${bounds[0]-8} 0)">${makeupMarks(makeupIndex).map(([x,y,w,h,color,opacity])=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}" opacity="${opacity}"/>`).join('')}</g>`:''}</svg>`;
 }
 const furnitureBounds = [[0,50,495,350],[497,0,400,405],[902,60,508,338],[1438,20,326,378],[25,414,424,427],[577,396,235,460],[918,433,491,407],[1442,391,308,470]];
 function furnitureArt(type) { const b=furnitureBounds[type];return `<svg viewBox="${b.join(' ')}" aria-hidden="true"><defs><clipPath id="furniture-${type}"><rect x="${b[0]}" y="${b[1]}" width="${b[2]}" height="${b[3]}"/></clipPath></defs><image clip-path="url(#furniture-${type})" href="assets/furniture.png" width="1774" height="887"/></svg>`; }
@@ -90,7 +107,7 @@ function drawDoll(canvas) {
  }
  ctx.putImageData(pixels,0,0);
  if(state.shoes){const shoeSource=[0,1,2,3,0,2,3,1][state.shoes];ctx.clearRect(0,608,405,116);ctx.filter=`hue-rotate(${[0,40,0,0,55,280,30,320][state.shoes]}deg)`;ctx.drawImage(characters,bounds[shoeSource]-8,608,405,116,0,608,405,116);ctx.filter='none';}
- if(state.makeup){const blush=['','#f3989e','#f084b4','#eda879','#db83b7','#e5a7bd','#e99991','#d888a9'][state.makeup];ctx.globalAlpha=.18+state.makeup*.035;ctx.fillStyle=blush;for(const x of [112,282]){ctx.beginPath();ctx.ellipse(x,264,22,9,0,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;}
+ for(const [x,y,w,h,color,opacity] of makeupMarks(state.makeup)){ctx.fillStyle=color;ctx.globalAlpha=opacity;ctx.fillRect(x,y,w,h);}ctx.globalAlpha=1;
 }
 function doll(){return '<canvas class="doll" width="405" height="724" aria-label="当前搭配的像素女孩"></canvas>';}
 function heading(title,sub){return `<div class="scene-heading"><h2>${title}</h2><small>${sub}</small></div>`;}
@@ -108,7 +125,7 @@ const optionNames={hair:['樱花粉','奶茶棕','雾蓝灰','薄荷绿','浅薰
 function itemCard(i){
  const locked=category==='outfit'&&!state.unlocked.includes(i),selected=state[category]===i;
  const filters=category==='hair'?[0,48,310,160,235,95,340,25]:category==='face'?[0,55,140,310,220,20,330,170]:[0,280,55,160,320,210,25,90];
- const art=sprite(category==='outfit'?i:category==='shoes'?[0,1,2,3,0,2,3,1][i]:0,category,category==='outfit'?'':`hue-rotate(${filters[i]}deg)`);
+ const art=sprite(category==='outfit'?i:category==='shoes'?[0,1,2,3,0,2,3,1][i]:0,category,category==='outfit'?'':category==='makeup'?'none':`hue-rotate(${filters[i]}deg)`,i);
  const name=category==='outfit'?outfitNames[i]:optionNames[category][i];
  return `<button class="item-card ${locked?'locked':''} ${selected?'selected':''}" data-item="${i}" aria-label="${name}${locked?'，需 '+(i===3?300:450)+' 金币解锁':''}" aria-pressed="${selected}">${art}${locked?`<i class="lock-badge">${icon('lock')}</i>`:''}<span class="${locked?'price':''}">${locked?'● '+(i===3?300:450):name}</span></button>`;
 }
