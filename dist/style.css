@@ -52,7 +52,7 @@ svg{display:block;width:100%;height:100%;overflow:hidden}
 .categories{height:60px;display:flex;gap:5px;padding:8px 10px 7px;flex-shrink:0;background:#fff4ef}
 .category{flex:1;min-width:0;border:1px solid #e4b8c1;border-radius:10px;background:#fffaf3;box-shadow:0 2px #edcbd1;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center}
 .category.active{border-color:#df6c99;background:#ffd6e5;box-shadow:inset 0 0 0 1px #ed8bb1,0 2px #e7aec3;color:#b74070}
-.category svg{height:20px;width:22px;color:#bc8292}
+.category svg{height:22px;width:24px}
 .category span{font-size:11px;letter-spacing:2px;font-weight:650;padding-left:2px}
 .wardrobe{height:30%;min-height:210px;max-height:280px;flex-shrink:0;padding:0 10px 9px;background:#fce5ec}
 .panel-label{height:29px;display:flex;align-items:center;justify-content:space-between;font-size:10px;letter-spacing:1px;color:#a16f7e;padding:0 3px}
