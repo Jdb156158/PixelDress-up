@@ -14,7 +14,7 @@ const base = process.env.TEST_URL || 'http://localhost:4186';
  try {
  await page.goto(base);await page.waitForFunction(()=>document.querySelector('.doll')?.toDataURL().length>10000);
  const original=await canvas();
- for(const [key,value] of [['hair',1],['face',2],['makeup',1],['skirt',2],['shoes',2]]){
+ for(const [key,value] of [['hair',1],['face',2],['makeup',1],['shoes',2]]){
   await click(`[data-category="${key}"]`);const before=await canvas();await click(`[data-item="${value}"]`);assert.notEqual(await canvas(),before,`${key} must change doll pixels`);assert.equal((await saved())[key],value);
  }
  await click('[data-category="outfit"]');await click('[data-item="2"]');assert.equal((await saved()).outfit,2);
@@ -22,7 +22,7 @@ const base = process.env.TEST_URL || 'http://localhost:4186';
  await click('[data-item="3"]');await click('#buy-outfit');assert.equal((await saved()).coins,4280);assert.equal((await saved()).outfit,3);
  await click('[data-action="photo"]');const downloadPromise=page.waitForEvent('download');await click('#download-look');const download=await downloadPromise;assert.equal(download.suggestedFilename(),'pixel-dress-up.png');await click('.modal-close');
  await page.reload();await page.waitForFunction(()=>document.querySelector('.doll')?.toDataURL().length>10000);assert.equal((await saved()).outfit,3);assert.notEqual(await canvas(),original);
- console.log('PASS: six dress categories, undo, unlock, PNG export, persistence');
+ console.log('PASS: five dress categories, undo, unlock, PNG export, persistence');
  await click('[data-page="home"]');await click('[data-action="edit"]');
  const furniture=page.locator('[data-furniture="1"]');const r=await furniture.boundingBox();
  await page.mouse.move(r.x+r.width*.5,r.y+r.height*.65);await page.mouse.down();await page.mouse.move(r.x+r.width*.5+30,r.y+r.height*.65+15,{steps:8});await page.mouse.up();

@@ -10,7 +10,6 @@ const icons = {
  hair:'<path d="M16 1C3 1 0 12 2 25l7 5 2-14 4-6 5 6 3 14 7-5C32 12 29 1 16 1Z"/>',
  makeup:'<path d="m13 2 8 3-6 17-8-3Z"/><path d="m7 19 9 3-3 9-9-3Z" fill="#d4a170"/>',
  shirt:'<path d="m8 3 8 3 8-3 8 8-5 7-5-3v15H10V15l-5 3-5-7Z"/>',
- skirt:'<path d="M9 4h14l7 25H2Z"/><path d="M10 8h12M12 12l-3 13m11-13 3 13" fill="none" stroke="#fff0ed" stroke-width="1.5"/>',
  shoes:'<path d="M7 7h10v11l11 4 2 7H2V18Z"/><path d="M6 19h10" stroke="#fff0ed" stroke-width="3"/>',
  undo:'<path d="M11 7 3 13l8 6v-5h7q9 0 9 12h4Q32 9 18 9h-7Z"/>',
  random:'<path d="m22 1 9 7-9 7V9c-8 0-12 18-21 18v-5C9 22 12 4 22 4Z"/><path d="m22 17 9 7-9 7v-5h-3l-6-7 3-4 5 6h1Z"/><path d="m1 5 6 0 6 7-3 4-5-6H1Z"/>',
@@ -42,9 +41,10 @@ function newBoard() {
  b[38] = {kind:'fabric',level:1};
  return b;
 }
-const defaults = {energy:120,coins:4580,gems:36,outfit:0,hair:0,face:0,makeup:0,skirt:0,shoes:0,unlocked:[0,1,2],furniture:initialFurniture,board:newBoard(),order:0,produced:0,sound:true};
+const defaults = {energy:120,coins:4580,gems:36,outfit:0,hair:0,face:0,makeup:0,shoes:0,unlocked:[0,1,2],furniture:initialFurniture,board:newBoard(),order:0,produced:0,sound:true};
 let state;
 try { state = {...structuredClone(defaults),...JSON.parse(localStorage.getItem(KEY) || 'null')}; } catch { state = structuredClone(defaults); }
+delete state.skirt;
 let page = 'dress', category = 'outfit', editing = false, draft = null, selectedFurniture = null, selectedCell = null;
 const history = [];
 let toastTimer;
@@ -64,7 +64,7 @@ const outfitHue=[0,0,0,0,55,280,335,60];
 const furnitureNames=['沙发','桌椅','地毯','挂画','收纳','灯具','植物','墙饰'];
 function sprite(index, region='outfit', filter='') {
  const i=outfitSource[index]??index;
- const box = region==='outfit' ? [bounds[i]-8,0,405,724] : region==='hair' ? [bounds[0]-8,0,405,324] : region==='face'||region==='makeup' ? [bounds[0]+67,169,263,139] : region==='shoes' ? [bounds[i]-8,589,405,130] : [bounds[i]-8,443,405,118];
+ const box = region==='outfit' ? [bounds[i]-8,0,405,724] : region==='hair' ? [bounds[0]-8,0,405,324] : region==='face'||region==='makeup' ? [bounds[0]+67,169,263,139] : [bounds[i]-8,589,405,130];
  return `<svg class="item-art" viewBox="${box.join(' ')}" aria-hidden="true" style="filter:${filter||`hue-rotate(${outfitHue[index]||0}deg)`}"><defs><clipPath id="char-${index}-${region}"><rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}"/></clipPath></defs><image clip-path="url(#char-${index}-${region})" href="assets/characters.png" width="2172" height="724"/></svg>`;
 }
 const furnitureBounds = [[0,50,495,350],[497,0,400,405],[902,60,508,338],[1438,20,326,378],[25,414,424,427],[577,396,235,460],[918,433,491,407],[1442,391,308,470]];
@@ -74,11 +74,10 @@ function drawDoll(canvas) {
  if(!characters.complete || !characters.naturalWidth)return;
  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.clearRect(0,0,405,724);ctx.imageSmoothingEnabled=false;
  const source=outfitSource[state.outfit];ctx.drawImage(characters,bounds[source]-8,0,405,724,0,0,405,724);
- // Keep the shared pose while independently changing hair, eyes, skirt and shoes.
+ // Keep the shared pose while independently changing hair, eyes and shoes.
  const pixels=ctx.getImageData(0,0,405,724), d=pixels.data;
  const hueHair=[0,48,310,160,235,95,340,25][state.hair];
  const hueDress=outfitHue[state.outfit];
- const hueSkirt=[0,280,55,160,320,210,25,90][state.skirt];
  const eyePalette=[[109,29,54],[81,66,126],[56,104,88],[133,88,32],[64,91,127],[145,55,94],[91,63,51],[55,52,67]][state.face];
  const rotate=(r,g,b,deg)=>{const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return [(0.213+c*.787-s*.213)*r+(.715-c*.715-s*.715)*g+(.072-c*.072+s*.928)*b,(.213-c*.213+s*.143)*r+(.715+c*.285+s*.14)*g+(.072-c*.072-s*.283)*b,(.213-c*.213-s*.787)*r+(.715-c*.715+s*.715)*g+(.072+c*.928+s*.072)*b];};
  for(let y=0;y<724;y++)for(let x=0;x<405;x++){
@@ -86,7 +85,6 @@ function drawDoll(canvas) {
   const r=d[p],g=d[p+1],b=d[p+2];let hue=0;
   if(y<312 && r>g*1.18 && b>g*1.1 && r>130)hue=hueHair;
   if(y>=312&&y<573)hue=hueDress;
-  if(y>446&&y<550)hue+=hueSkirt;
   if(hue){const c=rotate(r,g,b,hue);d[p]=c[0];d[p+1]=c[1];d[p+2]=c[2];}
   if(state.face&&y>195&&y<265&&x>85&&x<310&&r<160&&g<85&&b<115){d[p]=eyePalette[0];d[p+1]=eyePalette[1];d[p+2]=eyePalette[2];}
  }
@@ -103,10 +101,10 @@ function render(){
  updateHUD();drawDolls();
 }
 function renderDress(){
- const categories=[['face','face','脸'],['hair','hair','发'],['makeup','makeup','妆'],['outfit','shirt','衣'],['skirt','skirt','裙'],['shoes','shoes','鞋']];
+ const categories=[['face','face','脸'],['hair','hair','发'],['makeup','makeup','妆'],['outfit','shirt','衣'],['shoes','shoes','鞋']];
  $('#content').innerHTML=`<section class="scene dress-scene" aria-label="装扮工作室">${heading('装扮工作室','DRESSING STUDIO')}<div class="scene-tools"><button class="round-button" data-action="photo" aria-label="保存搭配图片">${icon('camera')}</button><button class="round-button" data-action="settings" aria-label="设置">${icon('settings')}</button></div>${doll()}<div class="scene-bottom"><button class="round-button" data-action="undo" aria-label="撤销上次搭配">${icon('undo')}</button><span class="outfit-tag">♡ ${outfitNames[state.outfit]} ♡</span><button class="round-button" data-action="random" aria-label="随机搭配">${icon('random')}</button></div></section><div class="categories" role="tablist" aria-label="装扮分类">${categories.map(([key,i,label])=>`<button role="tab" aria-selected="${category===key}" class="category ${category===key?'active':''}" data-category="${key}">${icon(i)}<span>${label}</span></button>`).join('')}</div><section class="wardrobe" aria-label="我的衣橱"><div class="panel-label"><b>✿ 我的衣橱</b><small>${category==='outfit'?'每一件，都有小小心动':'轻点试穿 · 遇见新的自己'}</small></div><div class="item-grid">${Array.from({length:8},(_,i)=>itemCard(i)).join('')}</div></section>`;
 }
-const optionNames={hair:['樱花粉','奶茶棕','雾蓝灰','薄荷绿','浅薰衣草','蜂蜜金','玫瑰红','栗子棕'],face:['甜心莓莓','紫罗兰','森林来信','琥珀时光','蓝色星辰','桃花眼眸','可可日记','夜空微光'],makeup:['自然素颜','蜜桃微醺','樱花气色','杏子奶油','莓果心事','温柔月光','珊瑚落日','玫瑰晚霞'],skirt:['原色裙摆','薄荷格调','葡萄奶昔','森林精灵','桃子布丁','晴空蓝调','焦糖午后','蜂蜜柚子'],shoes:['草莓玛丽珍','奶茶小皮鞋','海盐小皮鞋','黑糖蝴蝶结','薰衣草鞋','薄荷小皮鞋','可可蝴蝶结','玫瑰小皮鞋']};
+const optionNames={hair:['樱花粉','奶茶棕','雾蓝灰','薄荷绿','浅薰衣草','蜂蜜金','玫瑰红','栗子棕'],face:['甜心莓莓','紫罗兰','森林来信','琥珀时光','蓝色星辰','桃花眼眸','可可日记','夜空微光'],makeup:['自然素颜','蜜桃微醺','樱花气色','杏子奶油','莓果心事','温柔月光','珊瑚落日','玫瑰晚霞'],shoes:['草莓玛丽珍','奶茶小皮鞋','海盐小皮鞋','黑糖蝴蝶结','薰衣草鞋','薄荷小皮鞋','可可蝴蝶结','玫瑰小皮鞋']};
 function itemCard(i){
  const locked=category==='outfit'&&!state.unlocked.includes(i),selected=state[category]===i;
  const filters=category==='hair'?[0,48,310,160,235,95,340,25]:category==='face'?[0,55,140,310,220,20,330,170]:[0,280,55,160,320,210,25,90];
@@ -114,7 +112,7 @@ function itemCard(i){
  const name=category==='outfit'?outfitNames[i]:optionNames[category][i];
  return `<button class="item-card ${locked?'locked':''} ${selected?'selected':''}" data-item="${i}" aria-label="${name}${locked?'，需 '+(i===3?300:450)+' 金币解锁':''}" aria-pressed="${selected}">${art}${locked?`<i class="lock-badge">${icon('lock')}</i>`:''}<span class="${locked?'price':''}">${locked?'● '+(i===3?300:450):name}</span></button>`;
 }
-function changeLook(key,value){history.push(Object.fromEntries(['outfit','hair','face','makeup','skirt','shoes'].map(k=>[k,state[k]])));if(history.length>30)history.shift();state[key]=value;save();render();sound();$('.doll')?.classList.add('pop');}
+function changeLook(key,value){history.push(Object.fromEntries(['outfit','hair','face','makeup','shoes'].map(k=>[k,state[k]])));if(history.length>30)history.shift();state[key]=value;save();render();sound();$('.doll')?.classList.add('pop');}
 function unlock(i){const cost=i===3?300:450;modal(`<div class="modal-icon">${sprite(i)}</div><h2>${outfitNames[i]}</h2><p>把这份心动带回衣橱。<br>解锁后可以随时穿搭。</p><button id="buy-outfit">● ${cost} 金币解锁</button><button class="secondary" id="later">再想想</button>`);$('#later').onclick=()=>$('#modal').close();$('#buy-outfit').onclick=()=>{if(state.coins<cost){toast('金币还不够，去二合完成订单吧');return;}state.coins-=cost;state.unlocked.push(i);$('#modal').close();changeLook('outfit',i);toast('新装扮已加入衣橱 ♡');};}
 function renderHome(){
  const furniture=editing?draft:state.furniture;
@@ -183,7 +181,7 @@ function photo(){const c=$('.doll');if(!c)return;modal(`<h2>今天的心动搭�
 function settings(){modal(`<div class="modal-icon">${icon('settings')}</div><h2>小屋设置</h2><p>搭配、金币和小屋布置会自动保存在此浏览器。</p><div class="settings-row">轻柔交互音<button id="toggle-sound">${state.sound?'已开启':'已关闭'}</button></div><button class="secondary" id="reset-game">重新开始</button>`);$('#toggle-sound').onclick=e=>{state.sound=!state.sound;e.target.textContent=state.sound?'已开启':'已关闭';save();sound();};$('#reset-game').onclick=()=>{modal(`<h2>重新开始这段小日常？</h2><p>将清空此浏览器中的搭配、家具布置和合成进度。</p><button class="secondary" id="keep-progress">保留进度</button><button id="confirm-reset">确认重新开始</button>`);$('#keep-progress').onclick=()=>$('#modal').close();$('#confirm-reset').onclick=()=>{state=structuredClone(defaults);history.length=0;selectedCell=null;save();$('#modal').close();render();toast('新的小日常开始了 ♡');};};}
 const actions={
  undo(){const previous=history.pop();if(!previous){toast('已经是最初的搭配啦');return;}Object.assign(state,previous);save();render();sound(450);},
- random(){history.push(Object.fromEntries(['outfit','hair','face','makeup','skirt','shoes'].map(k=>[k,state[k]])));state.outfit=state.unlocked[Math.floor(Math.random()*state.unlocked.length)];for(const k of ['hair','face','makeup','skirt','shoes'])state[k]=Math.floor(Math.random()*8);save();render();sound(850);toast('今日份的小惊喜 ♡');},
+ random(){history.push(Object.fromEntries(['outfit','hair','face','makeup','shoes'].map(k=>[k,state[k]])));state.outfit=state.unlocked[Math.floor(Math.random()*state.unlocked.length)];for(const k of ['hair','face','makeup','shoes'])state[k]=Math.floor(Math.random()*8);save();render();sound(850);toast('今日份的小惊喜 ♡');},
  photo,settings,
  edit(){editing=true;draft=structuredClone(state.furniture);selectedFurniture=draft[0]?.id??null;render();toast('拖动家具调整位置，完成后点击保存');},
  'cancel-edit'(){editing=false;draft=null;selectedFurniture=null;render();toast('已取消本次布置');},
