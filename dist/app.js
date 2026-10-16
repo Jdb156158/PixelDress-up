@@ -64,7 +64,7 @@ const outfitHue=[0,0,0,0,55,280,335,60];
 const furnitureNames=['沙发','桌椅','地毯','挂画','收纳','灯具','植物','墙饰'];
 function sprite(index, region='outfit', filter='') {
  const i=outfitSource[index]??index;
- const box = region==='outfit' ? [bounds[i]-8,310,405,240] : region==='hair' ? [bounds[0]-8,0,405,324] : region==='face'||region==='makeup' ? [bounds[0]+67,169,263,139] : region==='shoes' ? [bounds[i]-8,589,405,130] : [bounds[i]-8,443,405,118];
+ const box = region==='outfit' ? [bounds[i]-8,0,405,724] : region==='hair' ? [bounds[0]-8,0,405,324] : region==='face'||region==='makeup' ? [bounds[0]+67,169,263,139] : region==='shoes' ? [bounds[i]-8,589,405,130] : [bounds[i]-8,443,405,118];
  return `<svg class="item-art" viewBox="${box.join(' ')}" aria-hidden="true" style="filter:${filter||`hue-rotate(${outfitHue[index]||0}deg)`}"><defs><clipPath id="char-${index}-${region}"><rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}"/></clipPath></defs><image clip-path="url(#char-${index}-${region})" href="assets/characters.png" width="2172" height="724"/></svg>`;
 }
 const furnitureBounds = [[0,50,495,350],[497,0,400,405],[902,60,508,338],[1438,20,326,378],[25,414,424,427],[577,396,235,460],[918,433,491,407],[1442,391,308,470]];
