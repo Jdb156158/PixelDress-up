@@ -62,6 +62,44 @@ const outfitNames=['草莓奶油','午后心事','晴空来信','午夜玫瑰','
 const outfitSource=[0,1,2,3,0,2,1,3];
 const outfitHue=[0,0,0,0,55,280,335,60];
 const furnitureNames=['沙发','桌椅','地毯','挂画','收纳','灯具','植物','墙饰'];
+const hairColors = [null,
+ {hue:22,saturation:.36,lightness:.76},
+ {hue:207,saturation:.25,lightness:.85},
+ {hue:145,saturation:.4,lightness:1},
+ {hue:270,saturation:.44,lightness:1},
+ {hue:42,saturation:.72,lightness:1},
+ {hue:344,saturation:.72,lightness:.76},
+ {hue:18,saturation:.45,lightness:.64}
+];
+// The head mask excludes skin, ears, the bow and neckline; pale highlights are hair too.
+const hairMaskCanvas=document.createElement('canvas');hairMaskCanvas.width=405;hairMaskCanvas.height=330;
+const hairMaskContext=hairMaskCanvas.getContext('2d');hairMaskContext.fillRect(0,0,405,330);
+hairMaskContext.globalCompositeOperation='destination-out';
+for(const path of [
+ 'M102 210L122 184L134 163L142 178L149 197L162 207L181 212L183 205L193 212L228 212L224 200L230 181L237 163L245 179L260 192L279 207L292 212L294 253Q294 287 239 302L239 311L264 321L280 330H122L138 320L180 311V303Q111 299 103 271L99 242Z',
+ 'M76 235Q64 242 74 261L94 278L100 260L95 244Z',
+ 'M309 235Q334 238 331 258L307 278L302 260Z',
+ 'M276 113L291 113L313 124H333L351 113H365V159L347 162L337 155L343 194L333 202L322 193L312 202L303 194L310 154L293 162H276Z'
+])hairMaskContext.fill(new Path2D(path));
+const hairMask=hairMaskContext.getImageData(0,0,405,330).data;
+function colorHair(pixels,index) {
+ const color=hairColors[index];if(!color)return;
+ const hue=color.hue/60,secondary=1-Math.abs(hue%2-1);
+ const channels=[[1,secondary,0],[secondary,1,0],[0,1,secondary],[0,secondary,1],[secondary,0,1],[1,0,secondary]][Math.floor(hue)];
+ for(let p=0;p<hairMask.length;p+=4){
+  if(!hairMask[p+3]||!pixels[p+3])continue;
+  const high=Math.max(pixels[p],pixels[p+1],pixels[p+2])/255,low=Math.min(pixels[p],pixels[p+1],pixels[p+2])/255;
+  const originalLight=(high+low)/2,saturation=(high-low)/(1-Math.abs(2*originalLight-1)||1);
+  const light=originalLight*color.lightness,chroma=(1-Math.abs(2*light-1))*color.saturation*(.5+saturation*.5),base=light-chroma/2;
+  const coverage=hairMask[p+3]/255;
+  for(let c=0;c<3;c++)pixels[p+c]=pixels[p+c]*(1-coverage)+(channels[c]*chroma+base)*255*coverage;
+ }
+}
+function drawHairPreviews() {
+ if(!characters.complete||!characters.naturalWidth)return;
+ $$('canvas[data-hair]').forEach(canvas=>{const ctx=canvas.getContext('2d');ctx.clearRect(0,0,405,330);ctx.drawImage(characters,bounds[0]-8,0,405,330,0,0,405,330);const pixels=ctx.getImageData(0,0,405,330);colorHair(pixels.data,Number(canvas.dataset.hair));ctx.putImageData(pixels,0,0);});
+}
+
 const makeupLooks = [null,
  {cheek:'#f2838f',lip:'#c75f69',shadow:'#d29c87'},
  {cheek:'#ef6c9e',lip:'#ca467d',shadow:'#dd8db0'},
@@ -81,29 +119,28 @@ function makeupMarks(index) {
 }
 function sprite(index, region='outfit', filter='', makeupIndex=0) {
  const i=outfitSource[index]??index;
- const box = region==='outfit' ? [bounds[i]-8,0,405,724] : region==='hair' ? [bounds[0]-8,0,405,324] : region==='face'||region==='makeup' ? [bounds[0]+67,169,263,139] : [bounds[i]-8,589,405,130];
+ const box = region==='outfit' ? [bounds[i]-8,0,405,724] : region==='face'||region==='makeup' ? [bounds[0]+67,169,263,139] : [bounds[i]-8,589,405,130];
  return `<svg class="item-art" viewBox="${box.join(' ')}" aria-hidden="true" style="filter:${filter||`hue-rotate(${outfitHue[index]||0}deg)`}"><defs><clipPath id="char-${index}-${region}"><rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}"/></clipPath></defs><image clip-path="url(#char-${index}-${region})" href="assets/characters.png" width="2172" height="724"/>${region==='makeup'?`<g transform="translate(${bounds[0]-8} 0)">${makeupMarks(makeupIndex).map(([x,y,w,h,color,opacity])=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}" opacity="${opacity}"/>`).join('')}</g>`:''}</svg>`;
 }
 const furnitureBounds = [[0,50,495,350],[497,0,400,405],[902,60,508,338],[1438,20,326,378],[25,414,424,427],[577,396,235,460],[918,433,491,407],[1442,391,308,470]];
 function furnitureArt(type) { const b=furnitureBounds[type];return `<svg viewBox="${b.join(' ')}" aria-hidden="true"><defs><clipPath id="furniture-${type}"><rect x="${b[0]}" y="${b[1]}" width="${b[2]}" height="${b[3]}"/></clipPath></defs><image clip-path="url(#furniture-${type})" href="assets/furniture.png" width="1774" height="887"/></svg>`; }
-function drawDolls() { $$('.doll').forEach(canvas=>drawDoll(canvas)); }
+function drawDolls() { $$('.doll').forEach(canvas=>drawDoll(canvas));drawHairPreviews(); }
 function drawDoll(canvas) {
  if(!characters.complete || !characters.naturalWidth)return;
  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.clearRect(0,0,405,724);ctx.imageSmoothingEnabled=false;
  const source=outfitSource[state.outfit];ctx.drawImage(characters,bounds[source]-8,0,405,724,0,0,405,724);
  // Keep the shared pose while independently changing hair, eyes and shoes.
  const pixels=ctx.getImageData(0,0,405,724), d=pixels.data;
- const hueHair=[0,48,310,160,235,95,340,25][state.hair];
+ colorHair(d,state.hair);
  const hueDress=outfitHue[state.outfit];
  const eyePalette=[[109,29,54],[81,66,126],[56,104,88],[133,88,32],[64,91,127],[145,55,94],[91,63,51],[55,52,67]][state.face];
  const rotate=(r,g,b,deg)=>{const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return [(0.213+c*.787-s*.213)*r+(.715-c*.715-s*.715)*g+(.072-c*.072+s*.928)*b,(.213-c*.213+s*.143)*r+(.715+c*.285+s*.14)*g+(.072-c*.072-s*.283)*b,(.213-c*.213-s*.787)*r+(.715-c*.715+s*.715)*g+(.072+c*.928+s*.072)*b];};
  for(let y=0;y<724;y++)for(let x=0;x<405;x++){
   const p=(y*405+x)*4;if(d[p+3]<50)continue;
   const r=d[p],g=d[p+1],b=d[p+2];let hue=0;
-  if(y<312 && r>g*1.18 && b>g*1.1 && r>130)hue=hueHair;
-  if(y>=312&&y<573)hue=hueDress;
+  if(y>=312&&y<573&&!hairMask[p+3])hue=hueDress;
   if(hue){const c=rotate(r,g,b,hue);d[p]=c[0];d[p+1]=c[1];d[p+2]=c[2];}
-  if(state.face&&y>195&&y<265&&x>85&&x<310&&r<160&&g<85&&b<115){d[p]=eyePalette[0];d[p+1]=eyePalette[1];d[p+2]=eyePalette[2];}
+  if(state.face&&!hairMask[p+3]&&y>195&&y<265&&x>85&&x<310&&r<160&&g<85&&b<115){d[p]=eyePalette[0];d[p+1]=eyePalette[1];d[p+2]=eyePalette[2];}
  }
  ctx.putImageData(pixels,0,0);
  if(state.shoes){const shoeSource=[0,1,2,3,0,2,3,1][state.shoes];ctx.clearRect(0,608,405,116);ctx.filter=`hue-rotate(${[0,40,0,0,55,280,30,320][state.shoes]}deg)`;ctx.drawImage(characters,bounds[shoeSource]-8,608,405,116,0,608,405,116);ctx.filter='none';}
@@ -124,8 +161,8 @@ function renderDress(){
 const optionNames={hair:['樱花粉','奶茶棕','雾蓝灰','薄荷绿','浅薰衣草','蜂蜜金','玫瑰红','栗子棕'],face:['甜心莓莓','紫罗兰','森林来信','琥珀时光','蓝色星辰','桃花眼眸','可可日记','夜空微光'],makeup:['自然素颜','蜜桃微醺','樱花气色','杏子奶油','莓果心事','温柔月光','珊瑚落日','玫瑰晚霞'],shoes:['草莓玛丽珍','奶茶小皮鞋','海盐小皮鞋','黑糖蝴蝶结','薰衣草鞋','薄荷小皮鞋','可可蝴蝶结','玫瑰小皮鞋']};
 function itemCard(i){
  const locked=category==='outfit'&&!state.unlocked.includes(i),selected=state[category]===i;
- const filters=category==='hair'?[0,48,310,160,235,95,340,25]:category==='face'?[0,55,140,310,220,20,330,170]:[0,280,55,160,320,210,25,90];
- const art=sprite(category==='outfit'?i:category==='shoes'?[0,1,2,3,0,2,3,1][i]:0,category,category==='outfit'?'':category==='makeup'?'none':`hue-rotate(${filters[i]}deg)`,i);
+ const filters=category==='face'?[0,55,140,310,220,20,330,170]:[0,280,55,160,320,210,25,90];
+ const art=category==='hair'?`<canvas class="item-art hair-preview" data-hair="${i}" width="405" height="330" aria-hidden="true"></canvas>`:sprite(category==='outfit'?i:category==='shoes'?[0,1,2,3,0,2,3,1][i]:0,category,category==='outfit'?'':category==='makeup'?'none':`hue-rotate(${filters[i]}deg)`,i);
  const name=category==='outfit'?outfitNames[i]:optionNames[category][i];
  return `<button class="item-card ${locked?'locked':''} ${selected?'selected':''}" data-item="${i}" aria-label="${name}${locked?'，需 '+(i===3?300:450)+' 金币解锁':''}" aria-pressed="${selected}">${art}${locked?`<i class="lock-badge">${icon('lock')}</i>`:''}<span class="${locked?'price':''}">${locked?'● '+(i===3?300:450):name}</span></button>`;
 }
