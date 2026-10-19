@@ -30,6 +30,7 @@ npm run check
 # 另一个终端保持本地服务器运行
 npm test
 npm run test:hair
+npm run test:merge-drag
 ```
 
 可设置 `TEST_URL` 测试其他地址，设置 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 使用已安装的 Chromium 浏览器。

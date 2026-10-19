@@ -48,6 +48,9 @@ delete state.skirt;
 let page = 'dress', category = 'outfit', editing = false, draft = null, selectedFurniture = null, selectedCell = null;
 const history = [];
 let toastTimer;
+let cancelMergeDrag=null;
+window.addEventListener('blur',()=>cancelMergeDrag?.());
+document.addEventListener('visibilitychange',()=>cancelMergeDrag?.());
 function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { toast('浏览器存储不可用，本次进度暂存于页面'); } updateHUD(); }
 function updateHUD() { for(const k of ['energy','coins','gems']) $(`#${k}`).textContent = state[k].toLocaleString('en-US'); }
 function toast(message) { const t=$('#toast');t.textContent=message;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600); }
@@ -149,6 +152,7 @@ function drawDoll(canvas) {
 function doll(){return '<canvas class="doll" width="405" height="724" aria-label="当前搭配的像素女孩"></canvas>';}
 function heading(title,sub){return `<div class="scene-heading"><h2>${title}</h2><small>${sub}</small></div>`;}
 function render(){
+ cancelMergeDrag?.();
  $('.bottom-nav').style.display=editing?'none':'flex';
  $$('.bottom-nav button').forEach(b=>{b.classList.toggle('active',b.dataset.page===page);b.setAttribute('aria-current',b.dataset.page===page?'page':'false');});
  if(page==='dress')renderDress();else if(page==='home')renderHome();else renderMerge();
@@ -203,6 +207,7 @@ function nameOf(item){return item?item.kind==='crate'?'神秘包裹':item.kind==
 function requirements(){const level=Math.min(1+Math.floor(state.order/2),4);return [{kind:'fabric',level},{kind:'sweet',level:Math.min(1+Math.floor(state.order/3),4)}];}
 function have(req){return state.board.filter(x=>x?.kind===req.kind&&x.level===req.level).length;}
 function renderMerge(){
+ cancelMergeDrag?.();
  const req=requirements(),ready=req.every(r=>have(r)>0),s=state.board[selectedCell];
  $('#content').innerHTML=`<section class="merge-screen"><div class="merge-title"><h2>缝纫小日常 <span style="color:#dc8fa9">✿</span></h2><small>一点点合成，一点点心动</small></div><div class="order-panel"><div class="order-label">当前<br>订单</div>${req.map(r=>`<div class="order-object" title="${nameOf(r)}">${itemIcon(r)}<small>${Math.min(have(r),1)}/1 ${have(r)?'✓':''}</small></div>`).join('')}<div class="order-reward">奖励<br><b>● ${180+state.order*40}</b></div><button data-action="order" class="${ready?'ready':''}">${ready?'交付 ♡':'查看'}</button></div><div class="board-wrap"><div class="merge-board" aria-label="二合棋盘">${state.board.map((item,i)=>`<button class="cell ${item?.kind==='crate'?'crate':item?'filled':''} ${item?.kind==='generator'?'generator':''} ${selectedCell===i?'selected':''}" data-cell="${i}" aria-label="第${i+1}格，${nameOf(item)}">${itemIcon(item)}</button>`).join('')}</div></div><div class="merge-info"><div>${itemIcon(s||{kind:'generator'})}</div><div><p>${s?nameOf(s):'把相同的小物合在一起'}</p><small>${s?.kind==='generator'?'轻点材料箱 · 消耗 1 体力产出':s?.kind==='crate'?'轻点包裹，花费 5 金币拆开':s?'拖动合成，或点选两个相同物品':'拖动合成 · 轻点材料箱获得小物'}</small></div><button data-action="${s?.kind==='generator'?'produce':'merge-help'}">${s?.kind==='generator'?'产出 ϟ 1':'玩法'}</button></div></section>`;
  bindBoard();
@@ -220,11 +225,29 @@ function selectCell(i){const item=state.board[i];if(item?.kind==='generator'){se
 function produce(){if(state.energy<1){toast('体力不够了，点击顶部闪电补充');return;}const empty=state.board.findIndex(x=>!x);if(empty<0){toast('棋盘满了，先合成或拆开包裹吧');return;}state.energy--;state.board[empty]={kind:state.produced++%3===2?'sweet':'fabric',level:0};selectedCell=empty;save();renderMerge();sound(750);$(`[data-cell="${empty}"]`)?.classList.add('pop');}
 function bindBoard(){
  $$('.cell').forEach(el=>el.addEventListener('pointerdown',e=>{
-  if(e.button!==0)return;const from=Number(el.dataset.cell),item=state.board[from];const startX=e.clientX,startY=e.clientY;let ghost=null,moved=false;el.setPointerCapture(e.pointerId);
-  const move=ev=>{if(!item||['crate','generator'].includes(item.kind))return;if(!moved&&Math.hypot(ev.clientX-startX,ev.clientY-startY)>7){moved=true;ghost=document.createElement('div');ghost.className='drag-ghost';ghost.innerHTML=itemIcon(item);document.body.append(ghost);el.style.opacity='.35';}if(ghost){ghost.style.left=ev.clientX+'px';ghost.style.top=ev.clientY+'px';}};
-  const end=ev=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',end);el.removeEventListener('pointercancel',cancel);ghost?.remove();el.style.opacity='';if(moved){const target=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('[data-cell]');if(target)moveItem(from,Number(target.dataset.cell));}else selectCell(from);};
-  const cancel=()=>{ghost?.remove();el.style.opacity='';el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',end);el.removeEventListener('pointercancel',cancel);};
-  el.addEventListener('pointermove',move);el.addEventListener('pointerup',end);el.addEventListener('pointercancel',cancel);
+  if(e.button!==0)return;cancelMergeDrag?.();
+  const board=el.closest('.merge-board'),from=Number(el.dataset.cell),item=state.board[from],startX=e.clientX,startY=e.clientY;let ghost=null,moved=false;
+  const cancel=ev=>{
+   if(ev?.pointerId!==undefined&&ev.pointerId!==e.pointerId)return;
+   ghost?.remove();ghost=null;el.style.opacity='';
+   el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',end);el.removeEventListener('pointercancel',cancel);el.removeEventListener('lostpointercapture',cancel);
+   if(cancelMergeDrag===cancel)cancelMergeDrag=null;
+   if(el.hasPointerCapture(e.pointerId))el.releasePointerCapture(e.pointerId);
+  };
+  const move=ev=>{
+   if(ev.pointerId!==e.pointerId)return;
+   if(!board.isConnected){cancel();return;}
+   if(!item||['crate','generator'].includes(item.kind))return;
+   if(!moved&&Math.hypot(ev.clientX-startX,ev.clientY-startY)>7){moved=true;ghost=document.createElement('div');ghost.className='drag-ghost';ghost.innerHTML=itemIcon(item);board.append(ghost);el.style.opacity='.35';}
+   if(ghost){ghost.style.left=ev.clientX+'px';ghost.style.top=ev.clientY+'px';}
+  };
+  const end=ev=>{
+   if(ev.pointerId!==e.pointerId)return;
+   cancel();if(page!=='merge'||!board.isConnected)return;
+   if(moved){const target=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('[data-cell]');if(target)moveItem(from,Number(target.dataset.cell));}else selectCell(from);
+  };
+  cancelMergeDrag=cancel;el.setPointerCapture(e.pointerId);
+  el.addEventListener('pointermove',move);el.addEventListener('pointerup',end);el.addEventListener('pointercancel',cancel);el.addEventListener('lostpointercapture',cancel);
  }));
  $$('.cell').forEach(el=>el.addEventListener('click',e=>{if(e.detail===0)selectCell(Number(el.dataset.cell));}));
 }
