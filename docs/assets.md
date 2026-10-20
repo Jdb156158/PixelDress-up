@@ -28,3 +28,19 @@ Use case: stylized-concept. Asset type: pixel-art game room empty background. Sq
 ### 家具图集
 
 Use case: stylized-concept. Asset type: sprite atlas for cozy pixel dress-up game. Create a 4 column by 2 row sprite sheet, EXACTLY 8 isolated furniture objects uniformly centered inside equal square cells on transparent background, generous empty margins so none touch. Pixel art 16-bit detailed cute small square pixels, reddish brown outlines, warm cream pink and green palette. Row1 left to right: light BLUE two-seat couch with pink gingham cushion; warm wooden desk with pink upholstered wooden chair; oval mint green daisy flower rug; gold frame pink tulip wall picture. Row2 left to right: cream drawer chest with books and small pot; golden floor lamp with cream floral shade; lush green plant in white pot with pink bow; hanging ribbon pink heart macrame wall ornament. Isometric slight front view consistent with cozy dollhouse room. Every object complete unclipped, no overlapping objects, no writing, no grid lines, no character, no floor. Transparent background.
+### 八款长发（2026-10-19）
+
+模式：内置 `image_gen.imagegen`，透明背景；`characters.png` 仅作像素画风和头型比例参考。以下八份素材复制到 `dist/assets/`，保留生成的 Alpha。人物使用原有前发、脸和蝴蝶结，加上独立长发后层和垂在衣服前的发尾；发型预览、装扮、家园和 PNG 共用素材。
+
+公共提示词：
+
+Use case: stylized-concept. Asset type: a single transparent pixel-art wig sprite for a browser dress-up game. Input image: reference ONLY for chibi head proportions, pixel technique and cute outline style. Generate ONE HAIR-ONLY wig with no human, no face, no skin, no eyes, no body, no clothes. Front view perfectly centered, opaque hair with a large genuinely transparent oval face opening in the middle, soft straight fringe above that opening. The rounded head is oversized chibi, head width about 65% of the full sprite width; crown starts near top; face opening spans 34% of sprite width between y26% and y49%; long hair drops down both sides to y94%. Pixel-art stepped edges, tiny pixel highlights, dark colored outline, clear separated strands. Match the reference hand-drawn pastel pixel shading. Entire hairstyle visible with generous transparent padding, no clipping, no labels, no background, no checkerboard pattern, actual alpha transparency. No white bow on the head because the game adds that accessory separately. Style requested:
+
+- `dist/assets/long-straight.png`：腰长的柔顺长直发，末端整齐但轻柔分束，樱花粉
+- `dist/assets/long-waves.png`：腰长的大波浪长发，两侧宽大的 S 形波浪，奶茶棕
+- `dist/assets/long-twin-tails.png`：两束蓬松及腰长双马尾，浅雾蓝灰
+- `dist/assets/long-side-braid.png`：侧编长发，一条粗粗的长麻花辫垂在画面右侧，薄荷青绿
+- `dist/assets/long-curls.png`：蓬松及腰长卷发，发尾明显的螺旋卷，浅薰衣草紫
+- `dist/assets/long-twin-braids.png`：两条长麻花辫分垂两侧，小蝴蝶结收尾，蜂蜜金
+- `dist/assets/long-high-pony.png`：高高扎起的长马尾，长发从头顶向画面左侧弯落到腰部，玫瑰红
+- `dist/assets/long-princess.png`：半扎公主长发，上方细编辫环绕，两侧流畅的长波浪，栗子棕

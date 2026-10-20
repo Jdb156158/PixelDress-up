@@ -47,6 +47,7 @@ try { state = {...structuredClone(defaults),...JSON.parse(localStorage.getItem(K
 delete state.skirt;
 let page = 'dress', category = 'outfit', editing = false, draft = null, selectedFurniture = null, selectedCell = null;
 const history = [];
+let hairGroup=state.hair>=8?'long':'short';
 let toastTimer;
 let cancelMergeDrag=null;
 window.addEventListener('blur',()=>cancelMergeDrag?.());
@@ -86,7 +87,7 @@ for(const path of [
 ])hairMaskContext.fill(new Path2D(path));
 const hairMask=hairMaskContext.getImageData(0,0,405,330).data;
 function colorHair(pixels,index) {
- const color=hairColors[index];if(!color)return;
+ const color=hairColors[index%8];if(!color)return;
  const hue=color.hue/60,secondary=1-Math.abs(hue%2-1);
  const channels=[[1,secondary,0],[secondary,1,0],[0,1,secondary],[0,secondary,1],[secondary,0,1],[1,0,secondary]][Math.floor(hue)];
  for(let p=0;p<hairMask.length;p+=4){
@@ -98,9 +99,23 @@ function colorHair(pixels,index) {
   for(let c=0;c<3;c++)pixels[p+c]=pixels[p+c]*(1-coverage)+(channels[c]*chroma+base)*255*coverage;
  }
 }
+const longHairFiles=['long-straight','long-waves','long-twin-tails','long-side-braid','long-curls','long-twin-braids','long-high-pony','long-princess'];
+const longHairImages=[];
+function drawLongHair(ctx,index) {
+ if(index<8)return;
+ const i=index-8;
+ if(!longHairImages[i]){const image=new Image();longHairImages[i]=image;image.onload=()=>drawDolls();image.src=`assets/${longHairFiles[i]}.png`;}
+ const image=longHairImages[i];if(!image.complete||!image.naturalWidth)return;
+ ctx.drawImage(image,8,8,389,548);
+}
 function drawHairPreviews() {
  if(!characters.complete||!characters.naturalWidth)return;
- $$('canvas[data-hair]').forEach(canvas=>{const ctx=canvas.getContext('2d');ctx.clearRect(0,0,405,330);ctx.drawImage(characters,bounds[0]-8,0,405,330,0,0,405,330);const pixels=ctx.getImageData(0,0,405,330);colorHair(pixels.data,Number(canvas.dataset.hair));ctx.putImageData(pixels,0,0);});
+ $$('canvas[data-hair]').forEach(canvas=>{
+  const index=Number(canvas.dataset.hair),ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.imageSmoothingEnabled=false;
+  const head=document.createElement('canvas');head.width=405;head.height=330;const headContext=head.getContext('2d');
+  headContext.drawImage(characters,bounds[0]-8,0,405,330,0,0,405,330);const pixels=headContext.getImageData(0,0,405,330);colorHair(pixels.data,index);headContext.putImageData(pixels,0,0);
+  drawLongHair(ctx,index);ctx.drawImage(head,0,0);
+ });
 }
 
 const makeupLooks = [null,
@@ -146,6 +161,10 @@ function drawDoll(canvas) {
   if(state.face&&!hairMask[p+3]&&y>195&&y<265&&x>85&&x<310&&r<160&&g<85&&b<115){d[p]=eyePalette[0];d[p+1]=eyePalette[1];d[p+2]=eyePalette[2];}
  }
  ctx.putImageData(pixels,0,0);
+ if(state.hair>=8){
+  ctx.globalCompositeOperation='destination-over';drawLongHair(ctx,state.hair);ctx.globalCompositeOperation='source-over';
+  ctx.save();ctx.beginPath();ctx.rect(0,312,405,248);ctx.clip();drawLongHair(ctx,state.hair);ctx.restore();
+ }
  if(state.shoes){const shoeSource=[0,1,2,3,0,2,3,1][state.shoes];ctx.clearRect(0,608,405,116);ctx.filter=`hue-rotate(${[0,40,0,0,55,280,30,320][state.shoes]}deg)`;ctx.drawImage(characters,bounds[shoeSource]-8,608,405,116,0,608,405,116);ctx.filter='none';}
  for(const [x,y,w,h,color,opacity] of makeupMarks(state.makeup)){ctx.fillStyle=color;ctx.globalAlpha=opacity;ctx.fillRect(x,y,w,h);}ctx.globalAlpha=1;
 }
@@ -160,13 +179,13 @@ function render(){
 }
 function renderDress(){
  const categories=[['face','face','脸'],['hair','hair','发'],['makeup','makeup','妆'],['outfit','shirt','衣'],['shoes','shoes','鞋']];
- $('#content').innerHTML=`<section class="scene dress-scene" aria-label="装扮工作室">${heading('装扮工作室','DRESSING STUDIO')}<div class="scene-tools"><button class="round-button" data-action="photo" aria-label="保存搭配图片">${icon('camera')}</button><button class="round-button" data-action="settings" aria-label="设置">${icon('settings')}</button></div>${doll()}<div class="scene-bottom"><button class="round-button" data-action="undo" aria-label="撤销上次搭配">${icon('undo')}</button><span class="outfit-tag">♡ ${outfitNames[state.outfit]} ♡</span><button class="round-button" data-action="random" aria-label="随机搭配">${icon('random')}</button></div></section><div class="categories" role="tablist" aria-label="装扮分类">${categories.map(([key,i,label])=>`<button role="tab" aria-selected="${category===key}" class="category ${category===key?'active':''}" data-category="${key}">${icon(i)}<span>${label}</span></button>`).join('')}</div><section class="wardrobe" aria-label="我的衣橱"><div class="panel-label"><b>✿ 我的衣橱</b><small>${category==='outfit'?'每一件，都有小小心动':'轻点试穿 · 遇见新的自己'}</small></div><div class="item-grid">${Array.from({length:8},(_,i)=>itemCard(i)).join('')}</div></section>`;
+ $('#content').innerHTML=`<section class="scene dress-scene" aria-label="装扮工作室">${heading('装扮工作室','DRESSING STUDIO')}<div class="scene-tools"><button class="round-button" data-action="photo" aria-label="保存搭配图片">${icon('camera')}</button><button class="round-button" data-action="settings" aria-label="设置">${icon('settings')}</button></div>${doll()}<div class="scene-bottom"><button class="round-button" data-action="undo" aria-label="撤销上次搭配">${icon('undo')}</button><span class="outfit-tag">♡ ${outfitNames[state.outfit]} ♡</span><button class="round-button" data-action="random" aria-label="随机搭配">${icon('random')}</button></div></section><div class="categories" role="tablist" aria-label="装扮分类">${categories.map(([key,i,label])=>`<button role="tab" aria-selected="${category===key}" class="category ${category===key?'active':''}" data-category="${key}">${icon(i)}<span>${label}</span></button>`).join('')}</div><section class="wardrobe" aria-label="我的衣橱"><div class="panel-label"><b>✿ 我的衣橱</b>${category==='hair'?`<div class="hair-groups" role="group" aria-label="发型长度"><button data-hair-group="short" aria-pressed="${hairGroup==='short'}">短发</button><button data-hair-group="long" aria-pressed="${hairGroup==='long'}">长发 · 8款</button></div>`:`<small>${category==='outfit'?'每一件，都有小小心动':'轻点试穿 · 遇见新的自己'}</small>`}</div><div class="item-grid">${Array.from({length:8},(_,i)=>itemCard(i+(category==='hair'&&hairGroup==='long'?8:0))).join('')}</div></section>`;
 }
-const optionNames={hair:['樱花粉','奶茶棕','雾蓝灰','薄荷绿','浅薰衣草','蜂蜜金','玫瑰红','栗子棕'],face:['甜心莓莓','紫罗兰','森林来信','琥珀时光','蓝色星辰','桃花眼眸','可可日记','夜空微光'],makeup:['自然素颜','蜜桃微醺','樱花气色','杏子奶油','莓果心事','温柔月光','珊瑚落日','玫瑰晚霞'],shoes:['草莓玛丽珍','奶茶小皮鞋','海盐小皮鞋','黑糖蝴蝶结','薰衣草鞋','薄荷小皮鞋','可可蝴蝶结','玫瑰小皮鞋']};
+const optionNames={hair:['樱花粉','奶茶棕','雾蓝灰','薄荷绿','浅薰衣草','蜂蜜金','玫瑰红','栗子棕','樱花长直','奶茶波浪','雾蓝双马尾','薄荷侧编','薰衣草长卷','蜂蜜双麻花','玫瑰高马尾','栗子公主辫'],face:['甜心莓莓','紫罗兰','森林来信','琥珀时光','蓝色星辰','桃花眼眸','可可日记','夜空微光'],makeup:['自然素颜','蜜桃微醺','樱花气色','杏子奶油','莓果心事','温柔月光','珊瑚落日','玫瑰晚霞'],shoes:['草莓玛丽珍','奶茶小皮鞋','海盐小皮鞋','黑糖蝴蝶结','薰衣草鞋','薄荷小皮鞋','可可蝴蝶结','玫瑰小皮鞋']};
 function itemCard(i){
  const locked=category==='outfit'&&!state.unlocked.includes(i),selected=state[category]===i;
  const filters=category==='face'?[0,55,140,310,220,20,330,170]:[0,280,55,160,320,210,25,90];
- const art=category==='hair'?`<canvas class="item-art hair-preview" data-hair="${i}" width="405" height="330" aria-hidden="true"></canvas>`:sprite(category==='outfit'?i:category==='shoes'?[0,1,2,3,0,2,3,1][i]:0,category,category==='outfit'?'':category==='makeup'?'none':`hue-rotate(${filters[i]}deg)`,i);
+ const art=category==='hair'?`<canvas class="item-art hair-preview" data-hair="${i}" width="405" height="${i>=8?560:330}" aria-hidden="true"></canvas>`:sprite(category==='outfit'?i:category==='shoes'?[0,1,2,3,0,2,3,1][i]:0,category,category==='outfit'?'':category==='makeup'?'none':`hue-rotate(${filters[i]}deg)`,i);
  const name=category==='outfit'?outfitNames[i]:optionNames[category][i];
  return `<button class="item-card ${locked?'locked':''} ${selected?'selected':''}" data-item="${i}" aria-label="${name}${locked?'，需 '+(i===3?300:450)+' 金币解锁':''}" aria-pressed="${selected}">${art}${locked?`<i class="lock-badge">${icon('lock')}</i>`:''}<span class="${locked?'price':''}">${locked?'● '+(i===3?300:450):name}</span></button>`;
 }
@@ -255,10 +274,10 @@ function completeOrder(){const req=requirements();if(!req.every(r=>have(r)>0)){m
  req.forEach(r=>{state.board[state.board.findIndex(x=>x?.kind===r.kind&&x.level===r.level)]=null;});const reward=180+state.order*40;state.coins+=reward;state.gems++;state.energy=Math.min(120,state.energy+10);state.order++;selectedCell=null;save();renderMerge();sound(1100);toast(`订单完成！ +${reward} 金币 · +1 钻石 ♡`);
 }
 function photo(){const c=$('.doll');if(!c)return;modal(`<h2>今天的心动搭配</h2><p>${outfitNames[state.outfit]} · 只属于你的小小风格</p><img class="export-preview" src="${c.toDataURL('image/png')}" alt="搭配预览"><button id="download-look">保存透明 PNG</button>`);$('#download-look').onclick=()=>{const a=document.createElement('a');a.download='pixel-dress-up.png';a.href=c.toDataURL('image/png');a.click();toast('搭配图片已导出 ♡');};}
-function settings(){modal(`<div class="modal-icon">${icon('settings')}</div><h2>小屋设置</h2><p>搭配、金币和小屋布置会自动保存在此浏览器。</p><div class="settings-row">轻柔交互音<button id="toggle-sound">${state.sound?'已开启':'已关闭'}</button></div><button class="secondary" id="reset-game">重新开始</button>`);$('#toggle-sound').onclick=e=>{state.sound=!state.sound;e.target.textContent=state.sound?'已开启':'已关闭';save();sound();};$('#reset-game').onclick=()=>{modal(`<h2>重新开始这段小日常？</h2><p>将清空此浏览器中的搭配、家具布置和合成进度。</p><button class="secondary" id="keep-progress">保留进度</button><button id="confirm-reset">确认重新开始</button>`);$('#keep-progress').onclick=()=>$('#modal').close();$('#confirm-reset').onclick=()=>{state=structuredClone(defaults);history.length=0;selectedCell=null;save();$('#modal').close();render();toast('新的小日常开始了 ♡');};};}
+function settings(){modal(`<div class="modal-icon">${icon('settings')}</div><h2>小屋设置</h2><p>搭配、金币和小屋布置会自动保存在此浏览器。</p><div class="settings-row">轻柔交互音<button id="toggle-sound">${state.sound?'已开启':'已关闭'}</button></div><button class="secondary" id="reset-game">重新开始</button>`);$('#toggle-sound').onclick=e=>{state.sound=!state.sound;e.target.textContent=state.sound?'已开启':'已关闭';save();sound();};$('#reset-game').onclick=()=>{modal(`<h2>重新开始这段小日常？</h2><p>将清空此浏览器中的搭配、家具布置和合成进度。</p><button class="secondary" id="keep-progress">保留进度</button><button id="confirm-reset">确认重新开始</button>`);$('#keep-progress').onclick=()=>$('#modal').close();$('#confirm-reset').onclick=()=>{state=structuredClone(defaults);hairGroup='short';history.length=0;selectedCell=null;save();$('#modal').close();render();toast('新的小日常开始了 ♡');};};}
 const actions={
- undo(){const previous=history.pop();if(!previous){toast('已经是最初的搭配啦');return;}Object.assign(state,previous);save();render();sound(450);},
- random(){history.push(Object.fromEntries(['outfit','hair','face','makeup','shoes'].map(k=>[k,state[k]])));state.outfit=state.unlocked[Math.floor(Math.random()*state.unlocked.length)];for(const k of ['hair','face','makeup','shoes'])state[k]=Math.floor(Math.random()*8);save();render();sound(850);toast('今日份的小惊喜 ♡');},
+ undo(){const previous=history.pop();if(!previous){toast('已经是最初的搭配啦');return;}Object.assign(state,previous);hairGroup=state.hair>=8?'long':'short';save();render();sound(450);},
+ random(){history.push(Object.fromEntries(['outfit','hair','face','makeup','shoes'].map(k=>[k,state[k]])));state.outfit=state.unlocked[Math.floor(Math.random()*state.unlocked.length)];for(const k of ['hair','face','makeup','shoes'])state[k]=Math.floor(Math.random()*(k==='hair'?16:8));hairGroup=state.hair>=8?'long':'short';save();render();sound(850);toast('今日份的小惊喜 ♡');},
  photo,settings,
  edit(){editing=true;draft=structuredClone(state.furniture);selectedFurniture=draft[0]?.id??null;render();toast('拖动家具调整位置，完成后点击保存');},
  'cancel-edit'(){editing=false;draft=null;selectedFurniture=null;render();toast('已取消本次布置');},
@@ -272,7 +291,8 @@ const actions={
 };
 document.addEventListener('click',e=>{
  const nav=e.target.closest('[data-page]');if(nav){page=nav.dataset.page;selectedCell=null;render();sound(550);return;}
- const cat=e.target.closest('[data-category]');if(cat){category=cat.dataset.category;renderDress();drawDolls();sound(500);return;}
+ const cat=e.target.closest('[data-category]');if(cat){category=cat.dataset.category;if(category==='hair')hairGroup=state.hair>=8?'long':'short';renderDress();drawDolls();sound(500);return;}
+ const group=e.target.closest('[data-hair-group]');if(group){hairGroup=group.dataset.hairGroup;renderDress();drawDolls();sound(500);return;}
  const item=e.target.closest('[data-item]');if(item){const i=Number(item.dataset.item);if(category==='outfit'&&!state.unlocked.includes(i))unlock(i);else changeLook(category,i);return;}
  const add=e.target.closest('[data-add-furniture]');if(add){if(draft.length>=16){toast('小屋已经很热闹了，先收回一些家具吧');return;}const type=Number(add.dataset.addFurniture);selectedFurniture=Date.now();draft.push({id:selectedFurniture,type,x:50,y:type===3||type===7?42:80,w:[43,42,57,22,35,23,33,22][type],flip:false});renderHome();sound();return;}
  const action=e.target.closest('[data-action]');if(action&&actions[action.dataset.action])actions[action.dataset.action]();
