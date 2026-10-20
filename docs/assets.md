@@ -30,7 +30,7 @@ Use case: stylized-concept. Asset type: pixel-art game room empty background. Sq
 Use case: stylized-concept. Asset type: sprite atlas for cozy pixel dress-up game. Create a 4 column by 2 row sprite sheet, EXACTLY 8 isolated furniture objects uniformly centered inside equal square cells on transparent background, generous empty margins so none touch. Pixel art 16-bit detailed cute small square pixels, reddish brown outlines, warm cream pink and green palette. Row1 left to right: light BLUE two-seat couch with pink gingham cushion; warm wooden desk with pink upholstered wooden chair; oval mint green daisy flower rug; gold frame pink tulip wall picture. Row2 left to right: cream drawer chest with books and small pot; golden floor lamp with cream floral shade; lush green plant in white pot with pink bow; hanging ribbon pink heart macrame wall ornament. Isometric slight front view consistent with cozy dollhouse room. Every object complete unclipped, no overlapping objects, no writing, no grid lines, no character, no floor. Transparent background.
 ### 八款长发（2026-10-19）
 
-模式：内置 `image_gen.imagegen`，透明背景；`characters.png` 仅作像素画风和头型比例参考。以下八份素材复制到 `dist/assets/`，保留生成的 Alpha。人物使用原有前发、脸和蝴蝶结，加上独立长发后层和垂在衣服前的发尾；发型预览、装扮、家园和 PNG 共用素材。
+模式：内置 `image_gen.imagegen`，透明背景；`characters.png` 仅作像素画风和头型比例参考。以下八份素材复制到 `dist/assets/`，保留生成的 Alpha。长发模式移除原有短发，用完整长发素材连续绘制头顶、刘海与发尾，并对齐脸部开口；保留独立的脸和蝴蝶结；发型预览、装扮、家园和 PNG 共用素材。
 
 公共提示词：
 

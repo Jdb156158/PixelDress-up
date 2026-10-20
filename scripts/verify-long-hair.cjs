@@ -6,6 +6,7 @@ const base=process.env.TEST_URL||'http://localhost:4186';
  const browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})});
  try{
  const page=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce',acceptDownloads:true});
+ page.setDefaultTimeout(15000);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`);});
  await page.goto(base);await page.waitForFunction(()=>document.querySelector('.doll')?.toDataURL().length>10000);
  const outfitCount=process.env.SMOKE?1:8;
@@ -18,12 +19,14 @@ const base=process.env.TEST_URL||'http://localhost:4186';
    await page.locator('[data-hair-group=long]').click();assert.equal(await page.locator('[data-item]').count(),8);
    await page.waitForFunction(()=>longHairImages.length===8&&longHairImages.every(image=>image.complete&&image.naturalWidth));
    await page.locator(`[data-item="${hair}"]`).click();const comparison=await page.locator('.doll').evaluate(c=>{
-    const short=window.shortHairPixels,long=c.getContext('2d').getImageData(0,0,405,724).data;let added=0;
+    const short=window.shortHairPixels,long=c.getContext('2d').getImageData(0,0,405,724).data;let added=0,headChanged=0;
     for(let y=330;y<560;y++)for(let x=0;x<405;x++){const p=(y*405+x)*4;if(long[p+3]>200&&long.slice(p,p+4).some((value,c)=>Math.abs(value-short[p+c])>24))added++;}
+    for(let y=50;y<180;y++)for(let x=90;x<315;x++){const p=(y*405+x)*4;if(short[p+3]>200&&long.slice(p,p+3).some((value,c)=>Math.abs(value-short[p+c])>24))headChanged++;}
     const preserved=[[200,250],[135,225],[260,225],[200,650]].every(([x,y])=>{const p=(y*405+x)*4;return long.slice(p,p+4).every((value,c)=>Math.abs(value-short[p+c])<=3);});
-    return {added,preserved};
+    return {added,preserved,headChanged};
    });
    assert.ok(comparison.added>800,`outfit ${outfit}, hair ${hair}: long tails must be visible (${comparison.added})`);
+   assert.ok(comparison.headChanged>2000,`hair ${hair}: the old bob must be replaced, not retained (${comparison.headChanged})`);
    assert.ok(comparison.preserved,'face and shoes must stay unchanged apart from alpha rounding');
    const preview=await page.locator(`[data-hair="${hair}"]`).evaluate(c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;return {height:c.height,edge:[...Array(c.width).keys()].some(x=>d[x*4+3]||d[((c.height-1)*c.width+x)*4+3])};});
    assert.equal(preview.height,560);assert.equal(preview.edge,false,'long hair must fit inside preview');

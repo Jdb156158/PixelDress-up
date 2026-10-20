@@ -75,6 +75,7 @@ const hairColors = [null,
  {hue:344,saturation:.72,lightness:.76},
  {hue:18,saturation:.45,lightness:.64}
 ];
+const bowPath='M276 113L291 113L313 124H333L351 113H365V159L347 162L337 155L343 194L333 202L322 193L312 202L303 194L310 154L293 162H276Z';
 // The head mask excludes skin, ears, the bow and neckline; pale highlights are hair too.
 const hairMaskCanvas=document.createElement('canvas');hairMaskCanvas.width=405;hairMaskCanvas.height=330;
 const hairMaskContext=hairMaskCanvas.getContext('2d');hairMaskContext.fillRect(0,0,405,330);
@@ -83,11 +84,11 @@ for(const path of [
  'M102 210L122 184L134 163L142 178L149 197L162 207L181 212L183 205L193 212L228 212L224 200L230 181L237 163L245 179L260 192L279 207L292 212L294 253Q294 287 239 302L239 311L264 321L280 330H122L138 320L180 311V303Q111 299 103 271L99 242Z',
  'M76 235Q64 242 74 261L94 278L100 260L95 244Z',
  'M309 235Q334 238 331 258L307 278L302 260Z',
- 'M276 113L291 113L313 124H333L351 113H365V159L347 162L337 155L343 194L333 202L322 193L312 202L303 194L310 154L293 162H276Z'
+ bowPath
 ])hairMaskContext.fill(new Path2D(path));
 const hairMask=hairMaskContext.getImageData(0,0,405,330).data;
 function colorHair(pixels,index) {
- const color=hairColors[index%8];if(!color)return;
+ const color=hairColors[index];if(!color)return;
  const hue=color.hue/60,secondary=1-Math.abs(hue%2-1);
  const channels=[[1,secondary,0],[secondary,1,0],[0,1,secondary],[0,secondary,1],[secondary,0,1],[1,0,secondary]][Math.floor(hue)];
  for(let p=0;p<hairMask.length;p+=4){
@@ -100,21 +101,38 @@ function colorHair(pixels,index) {
  }
 }
 const longHairFiles=['long-straight','long-waves','long-twin-tails','long-side-braid','long-curls','long-twin-braids','long-high-pony','long-princess'];
-const longHairImages=[];
+const longHairImages=[],longHairSprites=[];
+// Each face opening maps to the same eyes and chin; the outer strands keep their silhouette.
+const longHairAnchors=[[474,838,436],[511,801,415],[526,787,424],[467,874,453],[518,794,423],[473,839,451],[659,1011,531],[542,860,399]];
+function removeShortHair(pixels){for(let p=0;p<hairMask.length;p+=4)pixels[p+3]*=1-hairMask[p+3]/255;}
+function drawBow(ctx){ctx.save();ctx.clip(new Path2D(bowPath));ctx.drawImage(characters,bounds[0]-8,0,405,330,0,0,405,330);ctx.restore();}
 function drawLongHair(ctx,index) {
  if(index<8)return;
  const i=index-8;
- if(!longHairImages[i]){const image=new Image();longHairImages[i]=image;image.onload=()=>drawDolls();image.src=`assets/${longHairFiles[i]}.png`;}
- const image=longHairImages[i];if(!image.complete||!image.naturalWidth)return;
- ctx.drawImage(image,8,8,389,548);
+ if(!longHairImages[i]){
+  const image=new Image();longHairImages[i]=image;
+  image.onload=()=>{
+   const hair=document.createElement('canvas');hair.width=405;hair.height=560;const hairContext=hair.getContext('2d',{willReadFrequently:true});hairContext.imageSmoothingEnabled=false;
+   const [left,right,top]=longHairAnchors[i],sx=[0,left,right,image.naturalWidth],sy=[0,top,Math.round(image.naturalHeight*.55),image.naturalHeight],dy=[8,190,310,556];
+   for(let y=8;y<556;y++){
+    const band=y<190?0:y<310?1:2,ratio=(sy[band+1]-sy[band])/(dy[band+1]-dy[band]),sourceY=Math.round(sy[band]+(y-dy[band])*ratio),sourceHeight=Math.max(1,Math.round(sy[band]+(y+1-dy[band])*ratio)-sourceY);
+    const blend=Math.min(1,(y-8)/140),dx=[8,Math.round((8+left/image.naturalWidth*389)*(1-blend)+95*blend),Math.round((8+right/image.naturalWidth*389)*(1-blend)+310*blend),397];
+    for(let x=0;x<3;x++)hairContext.drawImage(image,sx[x],sourceY,sx[x+1]-sx[x],sourceHeight,dx[x],y,dx[x+1]-dx[x],1);
+   }
+   longHairSprites[i]=hair;drawDolls();
+  };
+  image.src=`assets/${longHairFiles[i]}.png`;
+ }
+ if(longHairSprites[i])ctx.drawImage(longHairSprites[i],0,0);
 }
 function drawHairPreviews() {
  if(!characters.complete||!characters.naturalWidth)return;
  $$('canvas[data-hair]').forEach(canvas=>{
   const index=Number(canvas.dataset.hair),ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.imageSmoothingEnabled=false;
   const head=document.createElement('canvas');head.width=405;head.height=330;const headContext=head.getContext('2d');
-  headContext.drawImage(characters,bounds[0]-8,0,405,330,0,0,405,330);const pixels=headContext.getImageData(0,0,405,330);colorHair(pixels.data,index);headContext.putImageData(pixels,0,0);
-  drawLongHair(ctx,index);ctx.drawImage(head,0,0);
+  headContext.drawImage(characters,bounds[0]-8,0,405,330,0,0,405,330);const pixels=headContext.getImageData(0,0,405,330);if(index<8)colorHair(pixels.data,index);else removeShortHair(pixels.data);headContext.putImageData(pixels,0,0);
+  if(index>=8){ctx.fillStyle='#ffdec9';ctx.beginPath();ctx.ellipse(201,231,104,76,0,0,Math.PI*2);ctx.fill();}
+  ctx.drawImage(head,0,0);drawLongHair(ctx,index);if(index>=8)drawBow(ctx);
  });
 }
 
@@ -149,7 +167,7 @@ function drawDoll(canvas) {
  const source=outfitSource[state.outfit];ctx.drawImage(characters,bounds[source]-8,0,405,724,0,0,405,724);
  // Keep the shared pose while independently changing hair, eyes and shoes.
  const pixels=ctx.getImageData(0,0,405,724), d=pixels.data;
- colorHair(d,state.hair);
+ if(state.hair<8)colorHair(d,state.hair);
  const hueDress=outfitHue[state.outfit];
  const eyePalette=[[109,29,54],[81,66,126],[56,104,88],[133,88,32],[64,91,127],[145,55,94],[91,63,51],[55,52,67]][state.face];
  const rotate=(r,g,b,deg)=>{const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return [(0.213+c*.787-s*.213)*r+(.715-c*.715-s*.715)*g+(.072-c*.072+s*.928)*b,(.213-c*.213+s*.143)*r+(.715+c*.285+s*.14)*g+(.072-c*.072-s*.283)*b,(.213-c*.213-s*.787)*r+(.715-c*.715+s*.715)*g+(.072+c*.928+s*.072)*b];};
@@ -160,10 +178,11 @@ function drawDoll(canvas) {
   if(hue){const c=rotate(r,g,b,hue);d[p]=c[0];d[p+1]=c[1];d[p+2]=c[2];}
   if(state.face&&!hairMask[p+3]&&y>195&&y<265&&x>85&&x<310&&r<160&&g<85&&b<115){d[p]=eyePalette[0];d[p+1]=eyePalette[1];d[p+2]=eyePalette[2];}
  }
+ if(state.hair>=8)removeShortHair(d);
  ctx.putImageData(pixels,0,0);
  if(state.hair>=8){
-  ctx.globalCompositeOperation='destination-over';drawLongHair(ctx,state.hair);ctx.globalCompositeOperation='source-over';
-  ctx.save();ctx.beginPath();ctx.rect(0,312,405,248);ctx.clip();drawLongHair(ctx,state.hair);ctx.restore();
+  ctx.globalCompositeOperation='destination-over';ctx.fillStyle='#ffdec9';ctx.beginPath();ctx.ellipse(201,231,104,76,0,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation='source-over';
+  drawLongHair(ctx,state.hair);drawBow(ctx);
  }
  if(state.shoes){const shoeSource=[0,1,2,3,0,2,3,1][state.shoes];ctx.clearRect(0,608,405,116);ctx.filter=`hue-rotate(${[0,40,0,0,55,280,30,320][state.shoes]}deg)`;ctx.drawImage(characters,bounds[shoeSource]-8,608,405,116,0,608,405,116);ctx.filter='none';}
  for(const [x,y,w,h,color,opacity] of makeupMarks(state.makeup)){ctx.fillStyle=color;ctx.globalAlpha=opacity;ctx.fillRect(x,y,w,h);}ctx.globalAlpha=1;
