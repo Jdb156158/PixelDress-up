@@ -4,7 +4,7 @@
 
 [![Pixel Dress-up 游戏预览](docs/preview.png)](https://jdb156158.github.io/PixelDress-up/)
 
-参考提供的五张界面图制作的网页版像素换装小游戏。手机竖屏适配，桌面居中展示，无后端、无运行时依赖。
+参考提供的五张界面图制作的网页版换装小游戏，保留像素小屋界面并使用可旋转的骨骼人物。手机竖屏适配，桌面居中展示，无后端，运行库和素材均随站点提供。
 
 ## 玩法
 
@@ -23,6 +23,12 @@ python3 -m http.server 4186 --directory dist
 
 打开 [本地预览](http://localhost:4186)。直接双击 HTML 不适合图片导出，请通过 HTTP 运行。
 
+### 骨骼人物
+
+正式入口使用原游戏的房间、衣橱、分类、资源、家具与二合逻辑，只替换场景中的人物 Canvas。拖动人物转身，轻点挥手，双击回正；聚焦人物后按空格切换走路，方向键旋转。脸、发、妆、衣、鞋分类、解锁、撤销、随机、保存和 PNG 导出继续使用原有进度。
+
+角色源文件为 `art/character/strawberry.blend`，建模脚本为 `scripts/build-character.py`，网页渲染器为 `dist/doll3d.js`。`dist/character.html` 保留独立人物预览，[原二维版本](https://jdb156158.github.io/PixelDress-up/classic.html) 用于回归对照。
+
 ## 验证
 
 ```sh
@@ -31,6 +37,7 @@ npx playwright install chromium
 npm run check
 # 另一个终端保持本地服务器运行
 npm test
+npm run test:classic
 npm run test:hair
 npm run test:long-hair
 npm run test:merge-drag
@@ -42,6 +49,6 @@ npm run test:merge-drag
 
 ## 实现
 
-`dist/index.html`、`dist/style.css` 和 `dist/app.js` 构成完整静态应用。人物采用 Canvas 分层调整，家具使用透明像素图集，原生 Pointer Events 同时支持鼠标与触屏。素材保存在 `dist/assets/`，没有依赖外部图片服务。
+`dist/index.html`、`dist/style.css` 和 `dist/app.js` 构成完整静态应用。人物通过 Three.js / three-vrm 渲染统一骨架与可换部件，家具使用透明像素图集，原生 Pointer Events 同时支持鼠标与触屏。素材保存在 `dist/assets/`，没有依赖外部图片服务。运行库及其许可证保存在 `dist/vendor/`。
 
 GitHub Actions 在 `main` 更新时自动部署 `dist/` 至 GitHub Pages。

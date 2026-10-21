@@ -22,7 +22,10 @@ jobs:
         with:
           node-version: '22'
       - name: Check JavaScript
-        run: node --check dist/app.js
+        run: |
+          node --check dist/app.js
+          node --input-type=module --check < dist/doll3d.js
+          node --input-type=module --check < dist/doll-paint.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

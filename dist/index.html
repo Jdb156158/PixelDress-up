@@ -5,8 +5,10 @@
 <meta name="theme-color" content="#f8d7e1"><meta name="description" content="一间属于你的像素小屋。搭配心动衣橱，布置温馨家园，开启轻松的二合小日常。">
 <title>Pixel Dress-up · 像素装扮小屋</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=c68f09d18155">
+<link rel="stylesheet" href="character.css?v=7">
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/","@pixiv/three-vrm":"./vendor/three-vrm/three-vrm.module.min.js"}}</script>
 </head>
-<body>
+<body data-character="3d">
 <aside class="desktop-note"><span class="tiny-bow">✿</span><p>PIXEL DRESS-UP</p><h1>把日常，<br>装扮成喜欢的模样。</h1><span class="note-rule"></span><p class="note-small">一间小屋 · 一柜心动 · 一点想象</p><div class="note-flowers">✿　♡　✿</div></aside>
 <main id="game" aria-label="像素装扮小屋">
 <header class="hud">
@@ -24,5 +26,6 @@
 </main>
 <aside class="desktop-help"><span>HOW TO PLAY</span><p>轻点换一身心情<br>拖动布置你的小屋<br>把相同物品合在一起</p><small>进度自动保存在此浏览器</small></aside>
 <dialog id="modal"><button class="modal-close" aria-label="关闭">×</button><div id="modal-body"></div></dialog>
-<script src="app.js?v=7b1f431c3605"></script>
+<script src="app.js?v=character-release-1"></script>
+<script type="module" src="doll3d.js?v=7"></script>
 </body></html>

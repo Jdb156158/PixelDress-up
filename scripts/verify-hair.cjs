@@ -1,6 +1,6 @@
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
-const base=process.env.TEST_URL||'http://localhost:4186';
+const base=process.env.TEST_URL||'http://localhost:4186/classic.html';
 const hairPoints=[[200,45],[170,125],[210,160],[55,225],[340,270],[100,300],[300,305]];
 const protectedPoints=[[200,250],[135,225],[260,225],[134,170],[238,171],[290,137],[350,137],[322,174],[82,251],[317,251]];
 const hue=([r,g,b])=>{const hi=Math.max(r,g,b),lo=Math.min(r,g,b),delta=hi-lo;if(!delta)return 0;return ((hi===r?(g-b)/delta:hi===g?(b-r)/delta+2:(r-g)/delta+4)*60+360)%360;};

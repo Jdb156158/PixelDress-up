@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8d7e1"><meta name="description" content="一间属于你的像素小屋。搭配心动衣橱，布置温馨家园，开启轻松的二合小日常。">
+<title>本地人物预览 · 像素装扮小屋</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css?v=c68f09d18155">
+<link rel="stylesheet" href="character.css?v=3">
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/","@pixiv/three-vrm":"./vendor/three-vrm/three-vrm.module.min.js"}}</script>
+</head>
+<body data-character="3d">
+<aside class="desktop-note"><span class="tiny-bow">✿</span><p>PIXEL DRESS-UP</p><h1>把日常，<br>装扮成喜欢的模样。</h1><span class="note-rule"></span><p class="note-small">一间小屋 · 一柜心动 · 一点想象</p><div class="note-flowers">✿　♡　✿</div></aside>
+<main id="game" aria-label="像素装扮小屋">
+<header class="hud">
+<button class="resource" data-action="energy" aria-label="补充体力"><span class="resource-icon energy">ϟ</span><strong id="energy">120</strong><span class="plus">+</span></button>
+<button class="resource" data-action="coins" aria-label="金币说明"><span class="resource-icon coin">●</span><strong id="coins">4,580</strong><span class="plus">+</span></button>
+<button class="resource" data-action="gems" aria-label="钻石说明"><span class="resource-icon gem">◆</span><strong id="gems">36</strong><span class="plus">+</span></button>
+</header>
+<div id="content"></div>
+<nav class="bottom-nav" aria-label="游戏页面">
+<button data-page="home"><span class="nav-icon" data-icon="home"></span><span>家园</span></button>
+<button data-page="merge"><span class="nav-icon" data-icon="merge"></span><span>二合</span></button>
+<button class="active" data-page="dress"><span class="nav-icon" data-icon="dress"></span><span>装扮</span></button>
+</nav>
+<div id="toast" role="status" aria-live="polite"></div>
+</main>
+<aside class="desktop-help"><span>HOW TO PLAY</span><p>轻点换一身心情<br>拖动布置你的小屋<br>把相同物品合在一起</p><small>进度自动保存在此浏览器</small></aside>
+<dialog id="modal"><button class="modal-close" aria-label="关闭">×</button><div id="modal-body"></div></dialog>
+<script src="app.js?v=local-3d-2"></script>
+<script type="module" src="doll3d.js?v=7"></script>
+</body></html>

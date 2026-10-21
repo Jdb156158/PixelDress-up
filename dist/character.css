@@ -1,0 +1,5 @@
+/* The original game owns the full layout; only its character canvas changes. */
+.doll-3d{width:74%;max-width:none;aspect-ratio:auto;image-rendering:auto;touch-action:none;cursor:grab;filter:drop-shadow(0 3px 1px #934b5828);transition:none}
+.home-scene .doll-3d{width:60%;max-width:none}
+.doll-3d:active{cursor:grabbing}
+.doll-3d:focus-visible{outline:2px dashed #f1aac3;outline-offset:4px}

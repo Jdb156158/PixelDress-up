@@ -1,7 +1,7 @@
 const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 require('node:fs').mkdirSync('test-results', {recursive:true});
-const base = process.env.TEST_URL || 'http://localhost:4186';
+const base = process.env.TEST_URL || 'http://localhost:4186/classic.html';
 (async () => {
  const browser = await chromium.launch({ headless:true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? {executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH} : {}) });
  const context = await browser.newContext({viewport:{width:390,height:844},acceptDownloads:true,reducedMotion:'reduce'});

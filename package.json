@@ -3,6 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "description": "A cozy pixel dress-up, room decorating and merge game",
-  "scripts": {"start": "python3 -m http.server 4186 --directory dist", "check": "node --check dist/app.js", "test": "node scripts/verify.cjs", "test:long-hair": "node scripts/verify-long-hair.cjs", "test:hair": "node scripts/verify-hair.cjs", "test:merge-drag": "node scripts/verify-merge-drag.cjs"},
-  "devDependencies": {"playwright": "1.62.1"}
+  "scripts": {
+    "start": "python3 -m http.server 4186 --directory dist",
+    "check": "node --check dist/app.js",
+    "test": "node scripts/verify-character.cjs",
+    "test:long-hair": "node scripts/verify-long-hair.cjs",
+    "test:hair": "node scripts/verify-hair.cjs",
+    "test:merge-drag": "node scripts/verify-merge-drag.cjs",
+    "test:character": "node scripts/verify-character.cjs",
+    "test:classic": "node scripts/verify.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
 }

@@ -160,7 +160,10 @@ function sprite(index, region='outfit', filter='', makeupIndex=0) {
 }
 const furnitureBounds = [[0,50,495,350],[497,0,400,405],[902,60,508,338],[1438,20,326,378],[25,414,424,427],[577,396,235,460],[918,433,491,407],[1442,391,308,470]];
 function furnitureArt(type) { const b=furnitureBounds[type];return `<svg viewBox="${b.join(' ')}" aria-hidden="true"><defs><clipPath id="furniture-${type}"><rect x="${b[0]}" y="${b[1]}" width="${b[2]}" height="${b[3]}"/></clipPath></defs><image clip-path="url(#furniture-${type})" href="assets/furniture.png" width="1774" height="887"/></svg>`; }
-function drawDolls() { $$('.doll').forEach(canvas=>drawDoll(canvas));drawHairPreviews(); }
+function drawDolls() {
+ if(document.body.dataset.character==='3d'){window.dollLook={state:{...state},page,editing};window.dispatchEvent(new CustomEvent('doll-look',{detail:window.dollLook}));}else $$('.doll').forEach(canvas=>drawDoll(canvas));
+ drawHairPreviews();
+}
 function drawDoll(canvas) {
  if(!characters.complete || !characters.naturalWidth)return;
  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.clearRect(0,0,405,724);ctx.imageSmoothingEnabled=false;
@@ -246,6 +249,7 @@ function requirements(){const level=Math.min(1+Math.floor(state.order/2),4);retu
 function have(req){return state.board.filter(x=>x?.kind===req.kind&&x.level===req.level).length;}
 function renderMerge(){
  cancelMergeDrag?.();
+ if(document.body.dataset.character==='3d'){window.dollLook={state:{...state},page,editing};window.dispatchEvent(new CustomEvent('doll-look',{detail:window.dollLook}));}
  const req=requirements(),ready=req.every(r=>have(r)>0),s=state.board[selectedCell];
  $('#content').innerHTML=`<section class="merge-screen"><div class="merge-title"><h2>缝纫小日常 <span style="color:#dc8fa9">✿</span></h2><small>一点点合成，一点点心动</small></div><div class="order-panel"><div class="order-label">当前<br>订单</div>${req.map(r=>`<div class="order-object" title="${nameOf(r)}">${itemIcon(r)}<small>${Math.min(have(r),1)}/1 ${have(r)?'✓':''}</small></div>`).join('')}<div class="order-reward">奖励<br><b>● ${180+state.order*40}</b></div><button data-action="order" class="${ready?'ready':''}">${ready?'交付 ♡':'查看'}</button></div><div class="board-wrap"><div class="merge-board" aria-label="二合棋盘">${state.board.map((item,i)=>`<button class="cell ${item?.kind==='crate'?'crate':item?'filled':''} ${item?.kind==='generator'?'generator':''} ${selectedCell===i?'selected':''}" data-cell="${i}" aria-label="第${i+1}格，${nameOf(item)}">${itemIcon(item)}</button>`).join('')}</div></div><div class="merge-info"><div>${itemIcon(s||{kind:'generator'})}</div><div><p>${s?nameOf(s):'把相同的小物合在一起'}</p><small>${s?.kind==='generator'?'轻点材料箱 · 消耗 1 体力产出':s?.kind==='crate'?'轻点包裹，花费 5 金币拆开':s?'拖动合成，或点选两个相同物品':'拖动合成 · 轻点材料箱获得小物'}</small></div><button data-action="${s?.kind==='generator'?'produce':'merge-help'}">${s?.kind==='generator'?'产出 ϟ 1':'玩法'}</button></div></section>`;
  bindBoard();

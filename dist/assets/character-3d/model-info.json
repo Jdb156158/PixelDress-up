@@ -1,0 +1,87 @@
+{
+  "blender": "4.5.3 LTS",
+  "vertices": 146855,
+  "bones": 24,
+  "modules": [
+    {
+      "slot": "body",
+      "option": 0
+    },
+    {
+      "slot": "hands",
+      "option": 0
+    },
+    {
+      "slot": "hands",
+      "option": 1
+    },
+    {
+      "slot": "hair",
+      "option": 0
+    },
+    {
+      "slot": "hair",
+      "option": 1
+    },
+    {
+      "slot": "hair",
+      "option": 2
+    },
+    {
+      "slot": "hair",
+      "option": 3
+    },
+    {
+      "slot": "hair",
+      "option": 4
+    },
+    {
+      "slot": "hair",
+      "option": 5
+    },
+    {
+      "slot": "hair",
+      "option": 6
+    },
+    {
+      "slot": "hair",
+      "option": 7
+    },
+    {
+      "slot": "hair",
+      "option": 8
+    },
+    {
+      "slot": "outfit",
+      "option": 0
+    },
+    {
+      "slot": "outfit",
+      "option": 1
+    },
+    {
+      "slot": "outfit",
+      "option": 2
+    },
+    {
+      "slot": "outfit",
+      "option": 3
+    },
+    {
+      "slot": "shoes",
+      "option": 0
+    },
+    {
+      "slot": "shoes",
+      "option": 1
+    }
+  ],
+  "animations": [
+    "idle",
+    "walk",
+    "wave"
+  ],
+  "vrmBytes": 9581224,
+  "source": "art/character/strawberry.blend",
+  "originalGeometry": true
+}
